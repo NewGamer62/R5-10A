@@ -100,10 +100,14 @@ services:
     container_name: pixelhub-api
     environment:
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=pixelhub;Username=pixelhub;Password=pixelhub_dev"
+      ConnectionStrings__Mongo: "mongodb://pixelhub:pixelhub_dev@mongo:27017/?authSource=admin"
+      Mongo__Database: "pixelhub"
     ports:
       - "${API_PORT:-5199}:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      mongo:
         condition: service_healthy
 
 volumes:
