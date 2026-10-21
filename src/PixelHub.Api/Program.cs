@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 using StackExchange.Redis;
+using Neo4j.Driver;
 using PixelHub.Api.Data;
 using PixelHub.Api.Models;
 using PixelHub.Api.Repositories;
@@ -35,6 +36,17 @@ builder.Services.AddSingleton<IGameCatalog>(sp =>
         sp.GetRequiredService<MongoGameCatalog>(),
         sp.GetRequiredService<IConnectionMultiplexer>()));
 
+// ---------- Neo4j (séance 4) ----------
+// Le driver est partagé (singleton) ; la session, elle, est jetable, une par opération (Q12).
+builder.Services.AddSingleton<IDriver>(_ =>
+    GraphDatabase.Driver(
+        builder.Configuration["Neo4j:Uri"]!,
+        AuthTokens.Basic(
+            builder.Configuration["Neo4j:User"],
+            builder.Configuration["Neo4j:Password"])));
+
+builder.Services.AddSingleton<ISocialGraph, Neo4jSocialGraph>();
+
 var app = builder.Build();
 
 // Crée la base et les tables au démarrage.
@@ -55,7 +67,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapGet("/", () => "PixelHub API — séance 3 OK");
+app.MapGet("/", () => "PixelHub API — séances 1 à 4 OK (PostgreSQL, MongoDB, Redis, Neo4j)");
 
 // PostgreSQL
 app.MapGet("/players", async (PixelHubContext db) =>
@@ -110,5 +122,16 @@ app.MapPost("/online/{pseudo}", async (string pseudo, RedisPresence p) =>
 { await p.TouchAsync(pseudo); return Results.Ok(); });
 
 app.MapGet("/online/count", async (RedisPresence p) => await p.CountOnlineAsync());
+
+// ---------- Séance 4 — Neo4j ----------
+app.MapGet("/social/{pseudo}/friends",
+    async (string pseudo, ISocialGraph g) => await g.GetFriendsAsync(pseudo));
+
+app.MapGet("/social/{pseudo}/recommendations",
+    async (string pseudo, int? depth, ISocialGraph g) =>
+        await g.RecommendGamesAsync(pseudo, depth ?? 2));
+
+app.MapGet("/social/{pseudo}/friend-suggestions",
+    async (string pseudo, ISocialGraph g) => await g.SuggestFriendsAsync(pseudo));
 
 app.Run();
