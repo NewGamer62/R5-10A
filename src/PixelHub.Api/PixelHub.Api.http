@@ -1,34 +1,39 @@
-# Carnet de tests PixelHub — cliquer sur « Send request » au-dessus de chaque bloc.
-# Port : celui affiché par `dotnet run` (5199 via launchSettings.json),
-# et aussi celui de l'API conteneurisée (docker compose --profile app up -d).
 @host = http://localhost:5199
 
-### Santé
+### Racine
 GET {{host}}/
+Accept: text/plain
 
-### Séance 1 — PostgreSQL
+### Séance 1 — PostgreSQL : Liste des joueurs
 GET {{host}}/players
 Accept: application/json
 
-### Séance 1 — bonus : créer un joueur
-POST {{host}}/players
-Content-Type: application/json
-
-{ "pseudo": "Pixel", "coins": 500 }
-
-### Séance 2 — MongoDB : catalogue complet
+### Séance 2 — MongoDB : Tous les jeux
 GET {{host}}/games
 Accept: application/json
 
-### Séance 2 — filtrage par genre
-GET {{host}}/games/genre/FPS
-Accept: application/json
-
-### Séance 2 — top 3
+### Séance 2 — MongoDB : Top 3 des jeux les mieux notés
 GET {{host}}/games/top/3
 Accept: application/json
 
-### Séance 2 — agrégation : note moyenne par genre
+### Séance 2 — MongoDB : Jeux du genre RPG
+GET {{host}}/games/genre/RPG
+Accept: application/json
+
+### Séance 2 — MongoDB : Un jeu par son identifiant (remplacer par un vrai ObjectId)
+GET {{host}}/games/663d29a1b18429ec586e0001
+Accept: application/json
+
+### Séance 2 — MongoDB : Statistiques par genre (agrégation)
 GET {{host}}/games/stats
 Accept: application/json
 
+
+
+### Séance 3 — Redis : Leaderboard top 5
+GET {{host}}/leaderboard/top/5
+Accept: application/json
+
+### Séance 3 — Mesure du cache
+GET {{host}}/games/timed
+Accept: application/json
